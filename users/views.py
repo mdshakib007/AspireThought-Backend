@@ -5,17 +5,21 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.filters import BaseFilterBackend
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
-from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserLogoutSerializer, UserProfileUpdateSerializer
+from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer
 
 
 
 class UserRegistrationAPIView(APIView):
     serializer_class = UserRegistrationSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -59,6 +63,7 @@ def activate(request, uid64, token):
 
 class UserLoginAPIView(APIView):
     serializer_class = UserLoginSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = self.serializer_class(data=self.request.data)
@@ -76,30 +81,24 @@ class UserLoginAPIView(APIView):
 
 
 class UserLogoutAPIView(APIView):
-    serializer_class = UserLogoutSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = self.serializer_class(data=self.request.data)
-        if serializer.is_valid():
-            token_key = serializer.validated_data['token']
-            user_id = serializer.validated_data['user_id']
+        try:
+            token = Token.objects.get(user=request.user)
+            token.delete()
+            return Response({'success': 'Logout successful!'}, status=200)
+        except Token.DoesNotExist:
+            return Response({'error': 'Token not found.'}, status=400)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500) 
 
-            try:
-                token = Token.objects.get(key=token_key)
-                if token.user.id == user_id:
-                    # Delete the token to log the user out
-                    token.delete()
-                    return Response({'success': 'Logout successful!'})
-                else:
-                    return Response({'error': 'Invalid token for the given user.'})
-            except Token.DoesNotExist:
-                return Response({'error': 'Token not found.'})
-
-        return Response(serializer.errors)
 
 class UserProfileUpdateAPIView(APIView):
-    serializer_class = UserProfileUpdateSerializer
+    serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def post(self, request):
         user = request.user 
@@ -108,5 +107,20 @@ class UserProfileUpdateAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"success": "Profile updated successfully!"})
-        
+
         return Response(serializer.errors)
+
+
+class SpecificUser(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        uid = request.query_params.get("user_id")
+
+        if uid:
+            return queryset.filter(id=uid)
+        return queryset
+
+class UserViewSet(ReadOnlyModelViewSet):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = get_user_model().objects.all()
+    filter_backends = [SpecificUser]

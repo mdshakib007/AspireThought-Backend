@@ -27,15 +27,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         return user
 
-class UserProfileUpdateSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ['first_name', 'last_name', 'phone_number', 'profile_picture', 'date_of_birth']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'profile_picture', 'date_of_birth']
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
     
-class UserLogoutSerializer(serializers.Serializer):
-    token = serializers.CharField(required=True)
-    user_id = serializers.IntegerField(required=True)
