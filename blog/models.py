@@ -1,6 +1,7 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 from users.models import CustomUser
+from tag.models import Tag
 
 
 class Blog(models.Model):
@@ -11,6 +12,7 @@ class Blog(models.Model):
     slug = models.SlugField(max_length=300, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    tags = models.ManyToManyField(Tag, related_name="blogs", blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:

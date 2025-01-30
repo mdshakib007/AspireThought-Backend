@@ -30,6 +30,7 @@ urlpatterns = [
     path('blog/', include('blog.urls')),
     path('comment/', include('blog.urls')),
     path('story/', include('story.urls')),
+    path('tag/', include('tag.urls')),
 ]
 
 if settings.DEBUG:
