@@ -50,7 +50,7 @@ class CreatePostAPIView(APIView):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            blog = serializer.save(user=user)
+            blog = serializer.save(author=user)
             return Response({"success" : "Blog created successfully!"})
         
         return Response(serializer.errors)

@@ -18,9 +18,9 @@ class AddTagAPIView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=self.request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({"success" : "Tag Added!"})
-        return serializer.errors
+            tag = serializer.save()
+            return Response({"success" : "Tag Added!", "id" : tag.id, "slug" : tag.slug, "name" : tag.name})
+        return Response(serializer.errors)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -31,8 +31,11 @@ class TagViewSet(ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         tag_id = self.request.query_params.get('tag_id')
+        tag_name = self.request.query_params.get('tag')
 
         if tag_id:
             queryset = queryset.filter(id=tag_id)
+        if tag_name:
+            queryset = queryset.filter(name__iexact=tag_name)
 
         return queryset
