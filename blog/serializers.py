@@ -1,16 +1,19 @@
 from rest_framework import serializers
 from blog.models import Blog
+from blog.models import Like
+
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = ['user', 'blog', 'created_at']
+        read_only_fields = ['created_at']
 
 class BlogSerializer(serializers.ModelSerializer):
+    like_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Blog
-        fields = ['id', 'author', 'title', 'image', 'body', 'slug', 'created_at', 'updated_at', 'tags']
-        read_only_fields = ['id', 'author', 'slug', 'created_at', 'updated_at']
+        fields = ['title', 'slug', 'author', 'image', 'body', 'tags', 'created_at', 'updated_at', 'like_count']
 
-    def create(self, validated_data):
-        validated_data['slug'] = validated_data.get('title').replace(" ", "-").lower()
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        validated_data.pop('slug', None)
-        return super().update(instance, validated_data)
+    def get_like_count(self, obj):
+        return obj.like_count()

@@ -19,7 +19,7 @@ class AddTagAPIView(APIView):
         serializer = self.serializer_class(data=self.request.data)
         if serializer.is_valid():
             tag = serializer.save()
-            return Response({"success" : "Tag Added!", "id" : tag.id, "slug" : tag.slug, "name" : tag.name})
+            return Response({"success" : "Tag Added!", "slug" : tag.slug, "name" : tag.name})
         return Response(serializer.errors)
 
 
@@ -27,14 +27,15 @@ class TagViewSet(ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Tag.objects.all()
+    lookup_field = 'slug'
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        tag_id = self.request.query_params.get('tag_id')
+        slug = self.request.query_params.get('slug')
         tag_name = self.request.query_params.get('tag')
 
-        if tag_id:
-            queryset = queryset.filter(id=tag_id)
+        if slug:
+            queryset = queryset.filter(slug=slug)
         if tag_name:
             queryset = queryset.filter(name__iexact=tag_name)
 
