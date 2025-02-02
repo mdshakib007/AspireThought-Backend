@@ -63,7 +63,7 @@ class DeletePostAPIView(APIView):
         post_slug = request.data.get('post_slug')
 
         try:
-            post = Blog.objects.get(slug=post_slug, user=user)
+            post = Blog.objects.get(slug=post_slug, author=user)
         except Blog.DoesNotExist:
             return ValidationError({"error" : "Post does not found"})
 
@@ -74,14 +74,14 @@ class DeletePostAPIView(APIView):
 class EditPostAPIView(APIView):
     def post(self, request):
         user = request.user
-        post_slug = request.data.get('post_slug')
+        post_slug = request.data.get('slug')
 
         try:
-            post = Blog.objects.get(slug=post_slug, user=user)
+            post = Blog.objects.get(slug=post_slug, author=user)
         except Blog.DoesNotExist:
             return ValidationError({"error" : "Post does not found"})
 
-        serializer = BlogSerializer(blog, data=request.data, partial=True)
+        serializer = BlogSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"success" : "Post updated successfully"})
