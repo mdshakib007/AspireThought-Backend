@@ -28,6 +28,9 @@ class Blog(models.Model):
     def like_count(self):
         return self.likes.count()
 
+    def comment_count(self):
+        return self.comments.count()
+
     def __str__(self):
         return self.title
 
@@ -42,3 +45,13 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.user.username} likes {self.blog.title}"
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="comments")
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.blog.title}"

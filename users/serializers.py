@@ -14,7 +14,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         password = self.validated_data['password']
 
         if len(password) < 8:
-            raise serializers.ValidationError({"error" : "Password must be at least 8 character"})
+            raise serializers.ValidationError({"error": "Password must be at least 8 characters"})
         
         if get_user_model().objects.filter(email=email).exists():
             raise serializers.ValidationError({'error': "This Email Already Exists!"})
@@ -30,9 +30,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'profile_picture', 'date_of_birth']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'profile_picture', 'date_of_birth', 'is_verified', 'bookmarks']
+
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
-    
+
+
+class BookmarkSerializer(serializers.Serializer):
+    slug = serializers.CharField(required=True)

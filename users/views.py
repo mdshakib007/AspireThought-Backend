@@ -13,7 +13,10 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.filters import BaseFilterBackend
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
-from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer
+from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, BookmarkSerializer
+from blog.models import Blog  
+
+
 
 
 
@@ -114,9 +117,12 @@ class UserProfileUpdateAPIView(APIView):
 class SpecificUser(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         uid = request.query_params.get("user_id")
+        username = request.query_params.get("username")
 
         if uid:
             return queryset.filter(id=uid)
+        if username:
+            return queryset.filter(username=username)
         return queryset
 
 class UserViewSet(ReadOnlyModelViewSet):
@@ -124,3 +130,40 @@ class UserViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = get_user_model().objects.all()
     filter_backends = [SpecificUser]
+
+
+class BookmarkAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        slug = request.data.get('slug')
+
+        try:
+            blog = Blog.objects.get(slug=slug)
+        except Blog.DoesNotExist:
+            return Response({"error": "Blog post does not exist."})
+
+        if slug not in user.bookmarks:
+            user.bookmarks.append(slug)
+            user.save()
+            return Response({"success": "Blog added to bookmarks."})
+        
+        return Response({"error": "Blog already in bookmarks."})
+
+    def delete(self, request):
+        user = request.user
+        slug = request.data.get('slug')
+
+        try:
+            blog = Blog.objects.get(slug=slug)
+        except Blog.DoesNotExist:
+            return Response({"error": "Blog post does not exist."})
+
+        if slug in user.bookmarks:
+            user.bookmarks.remove(slug)
+            user.save()
+            return Response({"success": "Blog removed from bookmarks."})
+        
+        return Response({"error": "Blog not in bookmarks."})

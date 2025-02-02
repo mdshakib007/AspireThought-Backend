@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework import status
 from rest_framework.filters import BaseFilterBackend
-from blog.models import Blog, Like
-from blog.serializers import BlogSerializer, LikeSerializer
+from blog.models import Blog, Like, Comment
+from blog.serializers import BlogSerializer, LikeSerializer, CommentSerializer
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.validators import ValidationError
 
@@ -20,6 +20,7 @@ class BlogViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Blog.objects.all().order_by('-created_at')
     pagination_class = BlogPagination
+    lookup_field = 'slug'
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -31,7 +32,7 @@ class BlogViewSet(ReadOnlyModelViewSet):
         title = self.request.query_params.get('title')
 
         if post_slug:
-            queryset = queryset.filter(id=post_slug)
+            queryset = queryset.filter(slug=post_slug)
         if author_id:
             queryset = queryset.filter(author = author_id)
         if tag_slug:
@@ -40,7 +41,7 @@ class BlogViewSet(ReadOnlyModelViewSet):
             queryset = queryset.filter(title__icontains = title)
 
         return queryset
-    
+
 
 class CreatePostAPIView(APIView):
     serializer_class = BlogSerializer
@@ -100,6 +101,35 @@ class LikeBlogView(APIView):
 
         if not created:
             like.delete()
-            return Response({"message": "Blog unliked"})
+            return Response({"success": "Blog unliked"})
 
-        return Response({"message": "Blog liked"})
+        return Response({"success": "Blog liked"})
+
+class CommentCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, blog_slug):
+        try:
+            blog = Blog.objects.get(slug=blog_slug)
+        except Blog.DoesNotExist:
+            return Response({"error": "Blog not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, blog=blog)
+            data = {"success": "Comment added!", "comment": serializer.data}
+            return Response(data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class CommentListView(ReadOnlyModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        # Get the blog_slug from URL keyword arguments.
+        blog_slug = self.kwargs.get('blog_slug')
+        # Filter comments for the specific blog.
+        return Comment.objects.filter(blog__slug=blog_slug).order_by('-created_at')
