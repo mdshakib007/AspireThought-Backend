@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from users.views import UserRegistrationAPIView, UserLoginAPIView, UserLogoutAPIView, activate, UserProfileUpdateAPIView, UserViewSet, BookmarkAPIView
+from users.views import UserRegistrationAPIView, UserLoginAPIView, UserLogoutAPIView, activate, UserProfileUpdateAPIView, UserViewSet, BookmarkAPIView, RequestVerification
 
 router = DefaultRouter()
 router.register("list", UserViewSet)
@@ -13,4 +13,6 @@ urlpatterns = [
     path('logout/', UserLogoutAPIView.as_view(), name='user-register'),
     path('update/', UserProfileUpdateAPIView.as_view(), name='user-profile-update'),
     path('bookmark/add/', BookmarkAPIView.as_view(), name='add-bookmark'),
+    path('bookmark/remove/', BookmarkAPIView.as_view(), name='remove-bookmark'),
+    path('request-verification/', RequestVerification.as_view(), name='request-verification'),
 ]

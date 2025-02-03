@@ -7,6 +7,7 @@ class CustomUser(AbstractUser):
     date_of_birth = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=15, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
+    verification_requested = models.BooleanField(default=False)
     bookmarks = models.JSONField(default=list, blank=True)
 
     def __str__(self):

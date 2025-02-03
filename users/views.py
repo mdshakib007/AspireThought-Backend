@@ -35,7 +35,7 @@ class UserRegistrationAPIView(APIView):
             # Generate token for email confirmation
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            confirm_link = f"http://127.0.0.1:8000/user/activate/{uid}/{token}"
+            confirm_link = f"https://aspirethought-backend.onrender.com/user/activate/{uid}/{token}"
             
             # Send confirmation email
             email_sub = "Confirm Your Email"
@@ -167,3 +167,19 @@ class BookmarkAPIView(APIView):
             return Response({"success": "Blog removed from bookmarks."})
         
         return Response({"error": "Blog not in bookmarks."})
+
+
+class RequestVerification(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        if not user.verification_requested:
+            user.verification_requested = True
+            user.save()
+            return Response({"success" : "Your request for verification is pending!"})
+            
+        return Response({"error" : "You already requested for verification!"})
+    
