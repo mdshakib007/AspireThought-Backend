@@ -53,6 +53,7 @@ class BlogViewIncrease(APIView):
             return Response({"error": "Blog not found"})
 
         blog.views += 1
+        blog.save()
         return Response({"success": "Blog viewed!"})
 
 
