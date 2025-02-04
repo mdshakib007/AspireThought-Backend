@@ -13,6 +13,7 @@ class Blog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(Tag, related_name="blogs", blank=True)
+    views = models.PositiveIntegerField(default=0)
 
     def save(self, *args, **kwargs):
         if not self.slug:

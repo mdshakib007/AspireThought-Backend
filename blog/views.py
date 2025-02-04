@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.filters import BaseFilterBackend
 from blog.models import Blog, Like, Comment
@@ -41,6 +41,19 @@ class BlogViewSet(ReadOnlyModelViewSet):
             queryset = queryset.filter(title__icontains = title)
 
         return queryset
+
+
+class BlogViewIncrease(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, slug):
+        try:
+            blog = Blog.objects.get(slug=slug)
+        except Blog.DoesNotExist:
+            return Response({"error": "Blog not found"})
+
+        blog.views += 1
+        return Response({"success": "Blog viewed!"})
 
 
 class CreatePostAPIView(APIView):
