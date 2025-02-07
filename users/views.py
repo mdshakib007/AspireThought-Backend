@@ -186,7 +186,9 @@ class FollowingAPIView(APIView):
 
         if slug not in user.following:
             user.following.append(slug)
+            tag.followers += 1
             user.save()
+            tag.save()
             return Response({"success": "topic added to following."})
         
         return Response({"error": "You already follow this topic."})
@@ -202,7 +204,9 @@ class FollowingAPIView(APIView):
 
         if slug in user.following:
             user.following.remove(slug)
+            tag.followers -= 1
             user.save()
+            tag.save()
             return Response({"success": "topic removed from your following."})
         
         return Response({"error": "You did not followed this topic."})
