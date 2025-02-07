@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
     is_verified = models.BooleanField(default=False)
     verification_requested = models.BooleanField(default=False)
     bookmarks = models.JSONField(default=list, blank=True)
+    following = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return f"{self.username}"
@@ -25,3 +26,16 @@ class CustomUser(AbstractUser):
 
     def get_bookmarks(self):
         return self.bookmarks
+
+    def add_following(self, slug):
+        if slug not in self.following:
+            self.following.append(slug)
+            self.save()
+
+    def remove_following(self, slug):
+        if slug in self.following:
+            self.following.remove(slug)
+            self.save()
+
+    def get_following(self):
+        return self.following

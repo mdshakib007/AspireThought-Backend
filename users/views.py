@@ -13,8 +13,9 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.filters import BaseFilterBackend
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
-from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, BookmarkSerializer
-from blog.models import Blog  
+from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, BookmarkSerializer, FollowingSerializer
+from blog.models import Blog
+from tag.models import Tag
 
 
 
@@ -167,6 +168,44 @@ class BookmarkAPIView(APIView):
             return Response({"success": "Blog removed from bookmarks."})
         
         return Response({"error": "Blog not in bookmarks."})
+
+
+
+class FollowingAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        slug = request.data.get('slug')
+
+        try:
+            tag = Tag.objects.get(slug=slug)
+        except Tag.DoesNotExist:
+            return Response({"error": "Tag does not exist."})
+
+        if slug not in user.following:
+            user.following.append(slug)
+            user.save()
+            return Response({"success": "topic added to following."})
+        
+        return Response({"error": "You already follow this topic."})
+
+    def delete(self, request):
+        user = request.user
+        slug = request.data.get('slug')
+
+        try:
+            tag = Tag.objects.get(slug=slug)
+        except Tag.DoesNotExist:
+            return Response({"error": "topic does not exist."})
+
+        if slug in user.following:
+            user.following.remove(slug)
+            user.save()
+            return Response({"success": "topic removed from your following."})
+        
+        return Response({"error": "You did not followed this topic."})
 
 
 class RequestVerification(APIView):

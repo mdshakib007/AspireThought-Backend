@@ -40,3 +40,6 @@ class UserLoginSerializer(serializers.Serializer):
 
 class BookmarkSerializer(serializers.Serializer):
     slug = serializers.CharField(required=True)
+
+class FollowingSerializer(serializers.Serializer):
+    slug = serializers.CharField(required=True)
