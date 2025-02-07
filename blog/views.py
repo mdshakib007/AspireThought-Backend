@@ -25,20 +25,21 @@ class BlogViewSet(ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # get all filter parameters
+        # Get all filter parameters
         post_slug = self.request.query_params.get('post_slug')
         author_id = self.request.query_params.get('author_id')
-        tag_slug = self.request.query_params.get('tag_slug')
+        tag_slugs = self.request.query_params.get('tag_slug')  # Example: "lifestyle,productivity"
         title = self.request.query_params.get('title')
 
         if post_slug:
             queryset = queryset.filter(slug=post_slug)
         if author_id:
-            queryset = queryset.filter(author = author_id)
-        if tag_slug:
-            queryset = queryset.filter(tags=tag_slug)
+            queryset = queryset.filter(author=author_id)
+        if tag_slugs:
+            tag_slug_list = tag_slugs.split(',')  # Convert string to list
+            queryset = queryset.filter(tags__slug__in=tag_slug_list).distinct()  # Use `__in` to filter
         if title:
-            queryset = queryset.filter(title__icontains = title)
+            queryset = queryset.filter(title__icontains=title)
 
         return queryset
 
