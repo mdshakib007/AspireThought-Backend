@@ -4,8 +4,34 @@ from users.models import CustomUser
 from tag.models import Tag
 
 
+class Story(models.Model):
+    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="stories")
+    name = models.CharField(max_length=250)
+    slug = models.SlugField(max_length=300, unique=True, blank=True, primary_key=True)
+    cover = models.ImageField(upload_to="story_covers/")
+    tags = models.ManyToManyField(Tag, related_name="stories", blank=True)  
+    summary = models.TextField()
+    reads = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            unique_slug = base_slug
+            counter = 1
+            while Story.objects.filter(slug=unique_slug).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class Blog(models.Model):
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="blogs")
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name="chapters", null=True, blank=True)
     title = models.CharField(max_length=250)
     image = models.ImageField(upload_to="blog_pics/", null=True, blank=True)
     body = models.TextField()
@@ -14,6 +40,7 @@ class Blog(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(Tag, related_name="blogs", blank=True)
     views = models.PositiveIntegerField(default=0)
+    is_story = models.BooleanField(default=False) 
 
     def save(self, *args, **kwargs):
         if not self.slug:

@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'subscriber',
     'users',
-    'story',
     'blog',
     'tag',
 ]
