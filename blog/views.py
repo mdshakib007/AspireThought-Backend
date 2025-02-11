@@ -19,7 +19,7 @@ class BlogPagination(PageNumberPagination):
 class BlogViewSet(ReadOnlyModelViewSet):
     serializer_class = BlogSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = Blog.objects.all().order_by('-created_at')
+    queryset = Blog.objects.filter(is_story=False).order_by('-created_at')
     pagination_class = BlogPagination
     lookup_field = 'slug'
 
