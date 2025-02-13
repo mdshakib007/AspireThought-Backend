@@ -14,7 +14,7 @@ from rest_framework.filters import BaseFilterBackend
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
 from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, BookmarkSerializer, FollowingSerializer
-from blog.models import Blog
+from blog.models import Blog, Story
 from tag.models import Tag
 
 
@@ -168,6 +168,44 @@ class BookmarkAPIView(APIView):
             return Response({"success": "Blog removed from bookmarks."})
         
         return Response({"error": "Blog not in bookmarks."})
+
+
+
+class LibraryAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        slug = request.data.get('slug')
+
+        try:
+            story = Story.objects.get(slug=slug)
+        except Story.DoesNotExist:
+            return Response({"error": "Story does not exist."})
+
+        if slug not in user.library:
+            user.library.append(slug)
+            user.save()
+            return Response({"success": "Story added to library."})
+        
+        return Response({"error": "Story already in library."})
+
+    def delete(self, request):
+        user = request.user
+        slug = request.data.get('slug')
+
+        try:
+            story = Story.objects.get(slug=slug)
+        except Story.DoesNotExist:
+            return Response({"error": "Story does not exist."})
+
+        if slug in user.library:
+            user.library.remove(slug)
+            user.save()
+            return Response({"success": "Story removed from library."})
+        
+        return Response({"error": "Story not in library."})
 
 
 
