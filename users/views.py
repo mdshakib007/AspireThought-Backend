@@ -1,3 +1,4 @@
+from django.db.models import Count, Sum
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -14,8 +15,10 @@ from rest_framework.filters import BaseFilterBackend
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
 from users.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, BookmarkSerializer, FollowingSerializer
-from blog.models import Blog, Story
+from blog.models import Blog, Story, Like, Comment
+from blog.serializers import BlogSerializer
 from tag.models import Tag
+from users.models import CustomUser
 
 
 
@@ -263,4 +266,61 @@ class RequestVerification(APIView):
             return Response({"success" : "Your request for verification is pending!"})
             
         return Response({"error" : "You already requested for verification!"})
-    
+
+
+
+#---------------------------------------------------------------#
+#-------------------------Dashboard-----------------------------#
+#---------------------------------------------------------------#
+
+class DashboardAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        author = request.user
+        blogs = Blog.objects.filter(author=author)
+
+        total_likes = Like.objects.filter(blog__in=blogs).count()
+        total_comments = Comment.objects.filter(blog__in=blogs).count()
+
+        stories = blogs.filter(is_story=True).values("story").distinct().count()
+        chapters = blogs.filter(is_story=True).count()
+        posts = blogs.filter(is_story=False).count()
+
+        post_views = blogs.filter(is_story=False).aggregate(total=Sum("views"))["total"] or 0
+        story_views = blogs.filter(is_story=True).aggregate(total=Sum("views"))["total"] or 0
+
+        # Get the most viewed post
+        most_viewed_post = blogs.order_by("-views").first()
+        most_viewed_post_data = BlogSerializer(most_viewed_post).data if most_viewed_post else None
+
+        # Get top content based on engagement score
+        top_content = blogs.annotate(
+            total_likes=Count("likes"),
+            total_comments=Count("comments"),
+            engagement_score=Sum("views") + Count("likes") * 5 + Count("comments") * 10
+        ).order_by("-engagement_score").first()
+
+        top_content_data = BlogSerializer(top_content).data if top_content else None
+        top_content_score = (
+            (top_content.views or 0) + 
+            (top_content.likes.count() * 5) + 
+            (top_content.comments.count() * 10)
+        ) if top_content else 0
+
+        return Response({
+            "stories": stories,
+            "chapters": chapters,
+            "posts": posts,
+            "likes": total_likes,
+            "comments": total_comments,
+            "post_views": post_views,
+            "story_views": story_views,
+            "most_viewed_post": most_viewed_post_data,
+            "top_content": {
+                "content": top_content_data,
+                "engagement_score": top_content_score
+            }
+        })
+

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from users.views import UserRegistrationAPIView, UserLoginAPIView, UserLogoutAPIView, activate, UserProfileUpdateAPIView, UserViewSet, BookmarkAPIView, RequestVerification, FollowingAPIView, LibraryAPIView
+from users.views import UserRegistrationAPIView, UserLoginAPIView, UserLogoutAPIView, activate, UserProfileUpdateAPIView, UserViewSet, BookmarkAPIView, RequestVerification, FollowingAPIView, LibraryAPIView, DashboardAPIView
 
 router = DefaultRouter()
 router.register("list", UserViewSet)
@@ -19,4 +19,5 @@ urlpatterns = [
     path('following/topic/add/', FollowingAPIView.as_view(), name='add-following'),
     path('following/topic/remove/', FollowingAPIView.as_view(), name='remove-following'),
     path('request-verification/', RequestVerification.as_view(), name='request-verification'),
+    path('dashboard/', DashboardAPIView.as_view(), name='dashboard'),
 ]
