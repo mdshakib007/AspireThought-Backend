@@ -2,7 +2,7 @@
 
 🚀 **AspireThought** is a blog platform where users can express their creativity through **posts** and **stories**. It supports markdown, allows user verification, and offers personalized content based on interests.  
 
-📌 **Live Demo**: [AspireThought Frontend (Demo)](https://mdshakib007.github.io/AspireThought_Frontend/index.html)  
+📌 **It's Live Now**: [AspireThought Frontend (Live)](https://aspire-thought.vercel.app/)  
 
 ---
 
@@ -24,7 +24,7 @@
 
 ### 📢 Engagement & Discovery  
 - **Follow topics** to receive relevant content.  
-- **Like & comment** on posts.  
+- **Like & comment** on posts or stories.  
 - **Search** for posts and stories by **keyword** or **topic**.  
 
 ---
